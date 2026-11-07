@@ -3,7 +3,7 @@ from io import BytesIO
 import math
 import warnings
 import numpy as np
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageOps, ImageCms, UnidentifiedImageError
 
 MAX_BYTES = 10 * 1024 * 1024
 MAX_SIDE = 1024
@@ -25,14 +25,22 @@ def decode_image(data: bytes) -> Image.Image:
                 if source.mode not in ("RGB", "L") or "transparency" in source.info:
                     raise ValueError("Use an opaque RGB or grayscale image; transparent and palette images are not supported by this engine.")
                 source.load()
-                return ImageOps.exif_transpose(source).convert("RGB")
+                oriented = ImageOps.exif_transpose(source)
+                profile = source.info.get("icc_profile")
+                if profile:
+                    try:
+                        return ImageCms.profileToProfile(oriented, BytesIO(profile),
+                            ImageCms.createProfile("sRGB"), outputMode="RGB")
+                    except (ImageCms.PyCMSError, OSError, ValueError) as error:
+                        raise ValueError("Convert this image to sRGB before processing; its color profile could not be read.") from error
+                return oriented.convert("RGB")
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as error:
         raise ValueError("This file is not a supported, readable image.") from error
 
 
 def png_bytes(image: Image.Image) -> bytes:
     stream = BytesIO()
-    image.save(stream, format="PNG")
+    image.save(stream, format="PNG", icc_profile=image.info.get("icc_profile"))
     return stream.getvalue()
 
 

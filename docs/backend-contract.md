@@ -12,7 +12,7 @@ Returns `{ "ready": true, "busy": false, "experimental": true, "method": "target
 
 ## POST /protect?profile=subtle&seed=42
 
-Body is the raw PNG/JPEG bytes, with matching `Content-Type`. This supersedes the earlier proposed multipart contract. Limit: 10 MB; sides 32–1024 pixels; opaque RGB or grayscale; single frame. The service checks decoded format and dimensions. No resizing or cropping is performed. EXIF orientation is applied; metadata is removed from output.
+Body is the raw PNG/JPEG bytes, with matching `Content-Type`. This supersedes the earlier proposed multipart contract. Limit: 10 MB; sides 32–1024 pixels; opaque RGB or grayscale; single frame. The service checks decoded format and dimensions. No resizing or cropping is performed. EXIF orientation is applied; identifying metadata is removed from output. Valid embedded color profiles are normalized to sRGB and the output retains that color profile; unreadable profiles are rejected.
 
 Success is a lossless `image/png` with `Content-Disposition` and `X-Viel-Report` JSON. Report includes method, exact model revision, profile, random seed, budget, step count, runtime, input/output hashes, hardware, encoder objectives, and pixel metrics. Status is always `experimental-unverified`. An unchanged image or failed optimization is an error.
 

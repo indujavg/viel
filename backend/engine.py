@@ -47,6 +47,8 @@ class ShieldEngine:
         original = source.astype(np.int16)
         exported = np.clip(exported, original-config['budget'], original+config['budget']).clip(0,255).astype(np.uint8)
         result = Image.fromarray(exported)
+        if image.info.get("icc_profile"):
+            result.info["icc_profile"] = image.info["icc_profile"]
         metrics = pixel_metrics(image, result)
         if metrics['max_channel_change'] == 0 or objective['objective_after'] >= objective['objective_before']:
             raise RuntimeError("No useful candidate was found; no result will be returned.")

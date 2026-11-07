@@ -43,7 +43,7 @@ npm run test:e2e          # browser tests; API responses are synthetic test fixt
 
 See [GPU setup](docs/gpu-setup.md). It requires Python 3.12, a CUDA GPU, PyTorch, and a reviewed/pinned model download. No GPU service is deployed by this repository.
 
-The supplied engine accepts **opaque RGB/grayscale PNG or JPEG, 10 MB maximum, 32–1024 pixels per side**. Larger pictures must be resized explicitly before processing. It keeps oriented dimensions unchanged and strips metadata when exporting PNG. Subtle permits at most 4/255 per RGB channel; Balanced permits 8/255. These bounds do not guarantee imperceptibility.
+The supplied engine accepts **opaque RGB/grayscale PNG or JPEG, 10 MB maximum, 32–1024 pixels per side**. Larger pictures must be resized explicitly before processing. It keeps oriented dimensions unchanged and strips identifying metadata when exporting PNG (valid embedded color profiles are normalized to sRGB and preserved). Subtle permits at most 4/255 per RGB channel; Balanced permits 8/255. These bounds do not guarantee imperceptibility.
 
 ## Structure
 

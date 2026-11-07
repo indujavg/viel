@@ -1,6 +1,6 @@
 import unittest
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageCms
 from backend.images import decode_image, png_bytes, pixel_metrics
 
 class ImagesTest(unittest.TestCase):
@@ -26,4 +26,16 @@ class ImagesTest(unittest.TestCase):
         stream=BytesIO();image.save(stream,format='JPEG',exif=exif)
         self.assertEqual(decode_image(stream.getvalue()).size,(40,64))
 
+    def test_valid_color_profile_is_normalized_and_preserved(self):
+        image=Image.new('RGB',(64,64),(100,120,140))
+        image.info['icc_profile']=ImageCms.ImageCmsProfile(ImageCms.createProfile('sRGB')).tobytes()
+        restored=decode_image(png_bytes(image))
+        self.assertEqual(restored.getpixel((0,0)),(100,120,140))
+        self.assertTrue(restored.info.get('icc_profile'))
+
+    def test_broken_color_profile_is_rejected(self):
+        image=Image.new('RGB',(64,64));image.info['icc_profile']=b'broken profile'
+        with self.assertRaises(ValueError):decode_image(png_bytes(image))
+
 if __name__=='__main__':unittest.main()
+
