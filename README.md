@@ -5,17 +5,17 @@ A website integrating actual upstream Fawkes to explore privacy against facial-r
 ## Run the website on Windows
 
 ```powershell
-git clone https://github.com/indujavg/viel.git
+git clone --branch feature/fawkes-face-proof https://github.com/indujavg/viel.git
 cd viel
 npm.cmd ci
 npm.cmd run dev -- --host 127.0.0.1
 ```
 
-If already cloned, stop the dev server and run `git pull --ff-only`, then `npm.cmd ci` and restart it. Open the Local URL printed by Vite. Keep the terminal open.
+If already cloned, stop the dev server and run `git fetch origin`, `git switch feature/fawkes-face-proof`, `git pull --ff-only`, then `npm.cmd ci` and restart it. Open the Local URL printed by Vite. Keep the terminal open.
 
 ## Connect Fawkes and run a measured experiment
 
-Open [the Face Cloak notebook](https://colab.research.google.com/github/indujavg/viel/blob/main/notebooks/viel_face_cloak.ipynb). Run its setup and service cells, then install its downloaded connection configuration as described in [face-proof.md](docs/face-proof.md). There are no photo-upload cells. Fawkes uses an isolated CPU runtime, so a GPU is not required.
+Open [the Face Cloak notebook](https://colab.research.google.com/github/indujavg/viel/blob/feature/fawkes-face-proof/notebooks/viel_face_cloak.ipynb). Run its setup and service cells, then install its downloaded connection configuration as described in [face-proof.md](docs/face-proof.md). There are no photo-upload cells. Fawkes uses an isolated CPU runtime, so a GPU is not required.
 
 The website offers a single-photo cloak and a recognition experiment. The latter compares classifiers fitted using original vs. cloaked training photos, evaluated on identical clean held-out photos. It requires a labelled train/test ZIP with at least 3 identities, 3 training photos and 2 separate test photos per identity. See the full layout and limitations in [face-proof.md](docs/face-proof.md).
 

@@ -12,6 +12,7 @@ test('offline Fawkes service disables generation', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Keep the picture/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Generate Fawkes cloak' })).toBeDisabled();
+  await page.screenshot({ path: 'test-results/face-workspace.png', fullPage: true });
 });
 
 test('cloaking requires consent and returns a labelled unverified result', async ({ page }) => {

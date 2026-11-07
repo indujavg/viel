@@ -12,6 +12,8 @@ Stop the website terminal with Ctrl+C. In Windows PowerShell:
 
 ```powershell
 cd "$env:USERPROFILE\viel"
+git fetch origin
+git switch feature/fawkes-face-proof
 git pull --ff-only
 npm.cmd ci
 Move-Item "$env:USERPROFILE\Downloads\viel-backend.env" ".env.local" -Force
