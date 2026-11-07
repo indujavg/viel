@@ -20,7 +20,7 @@ Install Git and Node.js 24 (npm is included). In a terminal:
 ```sh
 git clone --branch setup/viel-foundation https://github.com/indujavg/viel.git
 cd viel
-npm install
+npm ci
 npm run dev
 ```
 
@@ -37,7 +37,7 @@ npx playwright install chromium
 npm run test:e2e          # browser tests; API responses are synthetic test fixtures
 ```
 
-Dependency downloads are blocked in the preparation environment. GitHub Actions installs and tests dependencies. Until a generated lockfile is committed, `npm install` resolves dependency ranges; do not claim reproducible installs.
+`package-lock.json` records the resolved frontend dependencies. Use `npm ci` for repeatable installs; use `npm install` only when deliberately changing dependencies and commit the updated lockfile. GitHub Actions runs the production build, browser tests, and CPU backend tests.
 
 ## Enable the real experimental engine
 
