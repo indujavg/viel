@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ShieldWorkspace } from './ShieldWorkspace';
 import { validateDimensions, validateFile } from './lib/image';
 
 type Selection = { url: string; name: string; width: number; height: number };
@@ -58,14 +59,11 @@ export default function App() {
         <h1 id="headline">Keep the picture.<br/><span>Disrupt the edit.</span></h1>
         <p>Exploring subtle pixel changes that preserve how your photo looks while making AI manipulation harder.</p>
         <a className="primary" href="#workspace">Explore the workspace ↓</a>
-        <div className="status"><span className="dot"/> Research prototype · shielding engine not connected</div>
+        <div className="status"><span className="dot"/> Experimental image shielding · effectiveness must be tested</div>
       </section>
       <section id="workspace" aria-labelledby="workspace-title">
-        <div className="section-heading"><span className="eyebrow">01 / YOUR IMAGE</span><h2 id="workspace-title">Start with the original.</h2><p>Images stay in this browser session. This prototype sends no images to a server.</p></div>
-        <div className="workspace-grid">
-          <ImageSlot id="original" title="Original photo" description="Select the picture you would like to shield." />
-          <aside className="engine-card"><span className="eyebrow">SHIELD ENGINE</span><h3>The next step is real protection.</h3><p>The website is ready for exploration. Generating protective perturbations requires a model-specific engine that is not included yet.</p><button className="primary" disabled>Shield unavailable</button><p className="fine-print">No protective image is generated here. Meta AI effectiveness has not been established.</p></aside>
-        </div>
+        <div className="section-heading"><span className="eyebrow">01 / YOUR IMAGE</span><h2 id="workspace-title">Start with the original.</h2><p>Preview locally, then explicitly choose whether to send your image to the configured shielding service.</p></div>
+        <ShieldWorkspace />
       </section>
       <section id="lab" aria-labelledby="lab-title">
         <div className="section-heading"><span className="eyebrow">02 / SHIELD LAB</span><h2 id="lab-title">See the difference. Test the claim.</h2><p>Bring real outputs from a separate experiment. Use the same editor, prompt, settings, and seed where available. These are user-supplied images, not verified results.</p></div>

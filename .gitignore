@@ -5,3 +5,9 @@ dist/
 !.env.example
 *.local
 .DS_Store
+
+.venv/
+__pycache__/
+*.pyc
+playwright-report/
+test-results/

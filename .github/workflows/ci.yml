@@ -1,16 +1,36 @@
-name: Check website
+name: Check viel
 on: [push, pull_request]
 permissions:
   contents: read
 jobs:
-  check:
+  website:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      # Use npm ci once a verified package-lock.json is committed.
       - run: npm install --no-audit --no-fund
       - run: npm test
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: website-build-and-checks
+          path: |
+            dist/
+            package-lock.json
+            test-results/
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/requirements-test.txt
+      - run: pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m unittest discover -s backend/tests -v
+      - run: python -m compileall -q backend

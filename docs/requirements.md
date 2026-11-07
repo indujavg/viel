@@ -1,29 +1,28 @@
-# Requirements and milestones
+# Requirements and status
 
-## Confirmed goal
+## Confirmed purpose
 
-A website where users shield pictures with subtle changes: the image should look substantially the same to humans while edits produced by an AI editor are severely disrupted compared with edits of the original. Meta AI is an intended evaluation target, not a supported or proven integration. Stack: React, TypeScript, Vite.
+Users want pictures that look substantially the same to people but cause AI edits to diverge severely from successful edits of unprotected originals. Meta AI is an intended evaluation target. Stack: React + TypeScript + Vite, with a Python GPU service for optimization.
 
-## Milestone 1: reviewable frontend foundation
+## Implemented for development
 
-- Local PNG/JPEG selection and preview; maximum 10 MB and 24 megapixels.
-- Reject invalid input and failed image decoding.
-- Independently select original, candidate shielded image, and two edited outputs.
-- Responsive layout, labelled controls, visible keyboard focus, reduced-motion support.
-- No image upload, persistence, synthetic results, or claims of proven protection.
-- Shield action disabled until a real engine and its validation are available.
-- Validation tests, type check, and production build must pass before calling the milestone fully validated.
+- Responsive blue website with local previews and manual paired-output comparison.
+- Explicit upload consent, backend readiness, two bounded profiles, cancellation, PNG and report downloads.
+- FastAPI service with authentication and decoded input validation.
+- Real gradient-based VAE encoder optimizer; exact model revision required; no unmodified-image fallback.
+- Unit/API/browser tests and a GPU notebook.
 
-## Milestone 2: one reproducible engine experiment
+## Not established
 
-Choose an accessible image-editing model, review licenses and GPU needs, and reproduce a documented protection technique against that model. Implement and measure a real optimizer; random noise and visible watermarks do not satisfy the goal. Preserve output as lossless PNG. Record model revision, method, perturbation budget, seed, preprocessing, runtime, and hardware. Provide a reproducible notebook or Python service only after this experiment is specified.
+- Human imperceptibility at either pixel budget.
+- Disruption of a real image editor, including Meta AI.
+- Robustness to uploads, compression, resizing, screenshots, or future editors.
+- Production GPU memory/runtime requirements, public hosting, or access control for end users.
 
-## Milestone 3: evidence and backend integration
+## Acceptance gates
 
-Use multiple consented images, prompts, and repeated runs. Compare original and candidate perceptual quality, plus edits of both under matched settings. Include resizing, compression, and screenshot conditions. Report both failures and successes; define thresholds before testing. Visible output differences may come from randomness, so one screenshot comparison is insufficient. Measure human similarity separately from edit disruption. Successful editing disruption does not prove the image is unreadable to recognition models.
+Software gate: unit, API, browser, type, and production-build checks pass. These checks can use test fixtures but must identify them as such.
 
-Meta AI testing, if available to the user, starts with manually exported outputs and recorded date/settings. No direct integration is assumed. Do not generalize performance across model families or future versions.
+Engine gate: actual model loads on a GPU; exported PNG obeys the budget and reduces the intended encoder objective. This remains unverified until run with real weights.
 
-## Deferred
-
-Accounts, payments, database storage, automatic Meta AI access, deployment, and universal protection claims. A future backend needs explicit upload consent, retention/deletion behavior, authentication, rate limits, resource limits, and cancellation before public use.
+Product gate: matched editing experiments show meaningful disruption while blind human assessment confirms acceptable visual similarity. See `evaluation.md`. Do not present a candidate-generation success as this gate passing.

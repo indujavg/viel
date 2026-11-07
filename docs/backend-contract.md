@@ -1,11 +1,21 @@
-# Proposed protection API — design only
+# Implemented development API
 
-No backend is shipped. The frontend currently makes no API calls. Finalize this contract with the selected engine before implementation.
+The website calls same-origin `/api/health` and `/api/protect`. Vite strips `/api` and forwards to the configured GPU service, adding a secret bearer token server-side. Production needs an equivalent authenticated gateway; `vite preview` does not provide this proxy.
 
-For a first, bounded experiment, propose `POST /protect` with multipart form data containing one `image` (PNG/JPEG), a server-approved `profile`, and numeric `seed`. The server validates actual decoded format, byte size, dimensions, and permitted profiles independently of browser checks. Do not accept arbitrary model paths or code from the client.
+## Authentication
 
-Success: `200 image/png`, a lossless candidate result. Include an experiment identifier in `X-Viel-Experiment-Id` and expose it through CORS if cross-origin. Record method/model revision, perturbation budget, input/output hashes, seed, runtime, and preprocessing in an experiment record. Candidate generation is not evidence of effectiveness.
+Every backend request requires `Authorization: Bearer <VIEL_API_TOKEN>`. Startup requires a secret of at least 32 characters. No browser API token is shipped. The API does not enable cross-origin access; the gateway handles same-origin routing.
 
-Errors: structured JSON `{ "error": { "code": "...", "message": "..." } }` with statuses 400 (bad request), 413 (size), 415 (format), 422 (decode/profile), 429 (capacity), and 503 (engine unavailable). Never return the original as a successful protection result on failure. Long GPU jobs will need a separate queued-job API rather than an indefinite HTTP request.
+## GET /health
 
-Before wiring the frontend: agree on hosting, HTTPS, allowed origins, auth, timeouts/cancellation, retention/deletion, and model licensing. Show the service destination and obtain image-upload consent. Never store API secrets in Vite environment variables. Add an example environment file only when an actual endpoint configuration is implemented.
+Returns `{ "ready": true, "busy": false, "experimental": true, "method": "targeted-vae-pgd-v1", "profiles": ["subtle", "balanced"], "max_side": 1024 }`. `ready` is false when CUDA or model loading failed. Readiness means the engine loaded, not proven efficacy.
+
+## POST /protect?profile=subtle&seed=42
+
+Body is the raw PNG/JPEG bytes, with matching `Content-Type`. This supersedes the earlier proposed multipart contract. Limit: 10 MB; sides 32–1024 pixels; opaque RGB or grayscale; single frame. The service checks decoded format and dimensions. No resizing or cropping is performed. EXIF orientation is applied; metadata is removed from output.
+
+Success is a lossless `image/png` with `Content-Disposition` and `X-Viel-Report` JSON. Report includes method, exact model revision, profile, random seed, budget, step count, runtime, input/output hashes, hardware, encoder objectives, and pixel metrics. Status is always `experimental-unverified`. An unchanged image or failed optimization is an error.
+
+Statuses: 401 credentials, 413 oversized bytes, 415 unsupported Content-Type, 422 invalid image/settings, 429 GPU busy, 500 experiment failure, 503 engine unavailable, 504 four-minute deadline. Errors generally use `{ "error": { "code": "...", "message": "..." } }`; FastAPI's query type validation may use its standard `detail` envelope. Responses use `Cache-Control: no-store`.
+
+One request runs per process. Use one Uvicorn worker per GPU. Disconnects/deadlines set a cancellation event checked between optimization steps; a currently executing GPU operation is not forcibly interrupted. The slot stays occupied until the worker stops. This development service has no persistent queue or public-user rate limiting. Put public deployments behind authenticated, rate-limited infrastructure with request body and upload time limits.
