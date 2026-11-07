@@ -12,12 +12,8 @@ import fawkes
 
 model_dir=Path(fawkes.__file__).parent/'model'
 model_dir.mkdir(exist_ok=True)
-for name,expected in {'extractor_2':'ce703d481db2b83513bbdafa27434703'}.items():
-    target=model_dir/(name+'.h5')
-    with urllib.request.urlopen('https://mirror.cs.uchicago.edu/fawkes/files/'+name+'.h5',timeout=120) as response:
-        content=response.read()
-    if hashlib.md5(content).hexdigest()!=expected:raise RuntimeError('Model checksum mismatch')
-    target.write_bytes(content)
+from fawkes_weights import fetch_weights
+fetch_weights(model_dir, names=('extractor_2',))
 os.environ['CUDA_VISIBLE_DEVICES']=''
 from fawkes.protection import Fawkes
 with tempfile.TemporaryDirectory() as folder:

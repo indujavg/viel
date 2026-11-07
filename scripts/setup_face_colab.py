@@ -36,15 +36,8 @@ def install():
     command('git','-C',SOURCE,'checkout','--detach',REVISION)
     command(python,'-m','pip','install','--no-deps','-e',SOURCE)
     model_dir=SOURCE/'fawkes/model';model_dir.mkdir(exist_ok=True)
-    hashes={'extractor_2':'ce703d481db2b83513bbdafa27434703','extractor_0':'94854151fd9077997d69ceda107f9c6b'}
-    for name,expected in hashes.items():
-        destination=model_dir/f'{name}.h5'
-        if not destination.exists() or hashlib.md5(destination.read_bytes()).hexdigest()!=expected:
-            print(f'Downloading upstream Fawkes weights: {name}')
-            with urllib.request.urlopen(f'https://mirror.cs.uchicago.edu/fawkes/files/{name}.h5',timeout=120) as response:
-                data=response.read()
-            if hashlib.md5(data).hexdigest()!=expected:raise RuntimeError('Upstream model checksum mismatch.')
-            destination.write_bytes(data)
+    from fawkes_weights import fetch_weights
+    fetch_weights(model_dir)
     command(sys.executable,'-m','pip','install','fastapi>=0.115,<1','uvicorn[standard]>=0.34,<1',
             'Pillow>=11,<13','numpy>=2,<3','scikit-learn>=1.5,<2','requests>=2.32,<3','tqdm>=4.67,<5')
     # Current Colab supplies matched torch/torchvision. Check compatibility below;
