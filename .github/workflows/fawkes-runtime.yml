@@ -4,6 +4,9 @@ permissions:
   contents: read
 jobs:
   upstream-smoke:
+    permissions:
+      contents: read
+      statuses: write
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
@@ -23,4 +26,25 @@ jobs:
           git -C /tmp/viel-fawkes-upstream checkout --detach aedaa82d22504c4e7dbc86de869a6e0d943a5f2a
           pip install --no-deps -e /tmp/viel-fawkes-upstream
       - name: Generate a real cloak with downloaded model weights
-        run: python scripts/fawkes_smoke.py
+        id: smoke
+        run: |
+          set -o pipefail
+          python scripts/fawkes_smoke.py 2>&1 | tee fawkes-smoke.log
+      - name: Publish compact runtime diagnostics
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_OUTCOME: ${{ steps.smoke.outcome }}
+        run: |
+          python - <<'PYCODE'
+          import json,os,urllib.request
+          from pathlib import Path
+          lines=Path('fawkes-smoke.log').read_text().splitlines() if Path('fawkes-smoke.log').exists() else []
+          errors=[x for x in lines if any(word in x for word in ('Error:', 'Exception:', 'AssertionError'))]
+          messages=list(dict.fromkeys(errors))[-3:] or ['Fawkes smoke '+os.environ.get('TEST_OUTCOME','unknown')]
+          for index,message in enumerate(messages):
+              body=json.dumps({'state':'success' if os.environ.get('TEST_OUTCOME')=='success' else 'failure','context':f'diagnostics/fawkes-{index}','description':message[:140]}).encode()
+              url=f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/statuses/{os.environ["GITHUB_SHA"]}'
+              request=urllib.request.Request(url,data=body,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              urllib.request.urlopen(request).read()
+          PYCODE
