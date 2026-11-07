@@ -44,7 +44,8 @@ jobs:
                   scan(data)
               except ValueError:errors.append(text[-1000:])
           messages=list(dict.fromkeys(re.sub(r'\x1b\[[0-9;]*m','',x).replace('\n',' ') for x in errors))[:3]
-          if not messages:messages=['Browser tests '+os.environ.get('TEST_OUTCOME','unknown')]
+          if os.environ.get('TEST_OUTCOME')=='success':messages=['Browser tests passed']
+          elif not messages:messages=['Browser tests '+os.environ.get('TEST_OUTCOME','unknown')]
           for index,message in enumerate(messages):
               body=json.dumps({'state':'success' if os.environ.get('TEST_OUTCOME')=='success' else 'failure','context':f'diagnostics/browser-{index}','description':message[:140]}).encode()
               url=f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/statuses/{os.environ["GITHUB_SHA"]}'
@@ -72,7 +73,7 @@ jobs:
       - run: pip install -r backend/requirements-test.txt
       - run: pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
       - run: pip install --no-deps facenet-pytorch==2.6.0
-      - run: pip install scikit-learn
+      - run: pip install scikit-learn requests tqdm
       - id: backend-tests
         run: |
           set -o pipefail
@@ -88,7 +89,7 @@ jobs:
           from pathlib import Path
           lines=Path('backend-test.log').read_text().splitlines() if Path('backend-test.log').exists() else []
           errors=[x for x in lines if any(word in x for word in ('Error:', 'AssertionError', 'FAIL:', 'ERROR:'))]
-          messages=list(dict.fromkeys(errors))[-4:] or ['Backend tests '+os.environ.get('TEST_OUTCOME','unknown')]
+          messages=['Backend tests passed'] if os.environ.get('TEST_OUTCOME')=='success' else list(dict.fromkeys(errors))[-4:] or ['Backend tests '+os.environ.get('TEST_OUTCOME','unknown')]
           for index,message in enumerate(messages):
               body=json.dumps({'state':'success' if os.environ.get('TEST_OUTCOME')=='success' else 'failure','context':f'diagnostics/backend-{index}','description':message[:140]}).encode()
               url=f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/statuses/{os.environ["GITHUB_SHA"]}'

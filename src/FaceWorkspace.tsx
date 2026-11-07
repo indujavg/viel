@@ -75,7 +75,7 @@ export function FaceWorkspace() {
       throw new Error('Experiment timed out.');
     } catch (reason) {
       if (jobId.current) void fetch(`/api/face/jobs/${jobId.current}`, { method: 'DELETE' });
-      if (current === generation.current) setError(abort.signal.aborted ? 'Experiment cancelled.' : reason instanceof Error ? reason.message : 'Experiment failed.');
+      if (current === generation.current) { setMessage(''); setError(abort.signal.aborted ? 'Experiment cancelled.' : reason instanceof Error ? reason.message : 'Experiment failed.'); }
     } finally { if (current === generation.current) { setBusy(false); } }
   }
 

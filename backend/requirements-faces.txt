@@ -7,3 +7,4 @@ scikit-learn>=1.5,<2
 requests>=2.32,<3
 # Install facenet-pytorch==2.6.0 with --no-deps only after matched torch/torchvision.
 # The notebook validates a forward pass. Do not install legacy TensorFlow in this host.
+tqdm>=4.67,<5

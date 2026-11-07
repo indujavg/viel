@@ -46,7 +46,7 @@ def install():
             if hashlib.md5(data).hexdigest()!=expected:raise RuntimeError('Upstream model checksum mismatch.')
             destination.write_bytes(data)
     command(sys.executable,'-m','pip','install','fastapi>=0.115,<1','uvicorn[standard]>=0.34,<1',
-            'Pillow>=11,<13','numpy>=2,<3','scikit-learn>=1.5,<2','requests>=2.32,<3')
+            'Pillow>=11,<13','numpy>=2,<3','scikit-learn>=1.5,<2','requests>=2.32,<3','tqdm>=4.67,<5')
     # Current Colab supplies matched torch/torchvision. Check compatibility below;
     # do not downgrade the host runtime to facenet-pytorch's older declared pins.
     command(sys.executable,'-m','pip','install','--no-deps','facenet-pytorch==2.6.0')
