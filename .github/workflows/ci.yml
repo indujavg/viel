@@ -4,6 +4,9 @@ permissions:
   contents: read
 jobs:
   website:
+    permissions:
+      contents: read
+      statuses: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,7 +17,41 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - id: browser-tests
+        run: npm run test:e2e -- --reporter=json > browser-report.json
+      - name: Publish compact browser diagnostics
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_OUTCOME: ${{ steps.browser-tests.outcome }}
+        run: |
+          python - <<'PYCODE'
+          import json, os, re, urllib.request
+          from pathlib import Path
+          errors=[]
+          report=Path('browser-report.json')
+          if report.exists():
+              text=report.read_text()
+              start=text.find('{')
+              try:
+                  data=json.loads(text[start:])
+                  def scan(value):
+                      if isinstance(value,dict):
+                          if 'message' in value and isinstance(value['message'],str): errors.append(value['message'])
+                          for item in value.values():scan(item)
+                      elif isinstance(value,list):
+                          for item in value:scan(item)
+                  scan(data)
+              except ValueError:errors.append(text[-1000:])
+          messages=list(dict.fromkeys(re.sub(r'\x1b\[[0-9;]*m','',x).replace('\n',' ') for x in errors))[:3]
+          if os.environ.get('TEST_OUTCOME')=='success':messages=['Browser tests passed']
+          elif not messages:messages=['Browser tests '+os.environ.get('TEST_OUTCOME','unknown')]
+          for index,message in enumerate(messages):
+              body=json.dumps({'state':'success' if os.environ.get('TEST_OUTCOME')=='success' else 'failure','context':f'diagnostics/browser-{index}','description':message[:140]}).encode()
+              url=f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/statuses/{os.environ["GITHUB_SHA"]}'
+              request=urllib.request.Request(url,data=body,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              urllib.request.urlopen(request).read()
+          PYCODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -24,6 +61,9 @@ jobs:
             package-lock.json
             test-results/
   backend:
+    permissions:
+      contents: read
+      statuses: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +71,29 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r backend/requirements-test.txt
-      - run: pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
-      - run: python -m unittest discover -s backend/tests -v
+      - run: pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install --no-deps facenet-pytorch==2.6.0
+      - run: pip install scikit-learn requests tqdm
+      - id: backend-tests
+        run: |
+          set -o pipefail
+          python -m unittest discover -s backend/tests -v 2>&1 | tee backend-test.log
+      - name: Publish compact backend diagnostics
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_OUTCOME: ${{ steps.backend-tests.outcome }}
+        run: |
+          python - <<'PYCODE'
+          import json,os,urllib.request
+          from pathlib import Path
+          lines=Path('backend-test.log').read_text().splitlines() if Path('backend-test.log').exists() else []
+          errors=[x for x in lines if any(word in x for word in ('Error:', 'AssertionError', 'FAIL:', 'ERROR:'))]
+          messages=['Backend tests passed'] if os.environ.get('TEST_OUTCOME')=='success' else list(dict.fromkeys(errors))[-4:] or ['Backend tests '+os.environ.get('TEST_OUTCOME','unknown')]
+          for index,message in enumerate(messages):
+              body=json.dumps({'state':'success' if os.environ.get('TEST_OUTCOME')=='success' else 'failure','context':f'diagnostics/backend-{index}','description':message[:140]}).encode()
+              url=f'https://api.github.com/repos/{os.environ["GITHUB_REPOSITORY"]}/statuses/{os.environ["GITHUB_SHA"]}'
+              request=urllib.request.Request(url,data=body,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              urllib.request.urlopen(request).read()
+          PYCODE
       - run: python -m compileall -q backend

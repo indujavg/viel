@@ -22,10 +22,16 @@ def decode_image(data: bytes) -> Image.Image:
                     raise ValueError("Animated images are not supported.")
                 if min(source.size) < 32 or max(source.size) > MAX_SIDE:
                     raise ValueError("The experimental engine accepts sides from 32 to 1024 pixels. Resize a copy first.")
-                if source.mode not in ("RGB", "L") or "transparency" in source.info:
-                    raise ValueError("Use an opaque RGB or grayscale image; transparent and palette images are not supported by this engine.")
                 source.load()
-                oriented = ImageOps.exif_transpose(source)
+                if source.mode not in ('RGB','L') or 'transparency' in source.info:
+                    rgba=source.convert('RGBA')
+                    if rgba.getchannel('A').getextrema() != (255,255):
+                        raise ValueError('Use an opaque image; visible transparency is not supported.')
+                    normalized=rgba.convert('RGB')
+                    normalized.info.update(source.info)
+                    oriented=ImageOps.exif_transpose(normalized)
+                else:
+                    oriented=ImageOps.exif_transpose(source)
                 profile = source.info.get("icc_profile")
                 if profile:
                     try:
