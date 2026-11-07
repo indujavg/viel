@@ -1,0 +1,9 @@
+# Host API + evaluator. The notebook uses a separate Python 3.8 environment for Fawkes.
+fastapi>=0.115,<1
+uvicorn[standard]>=0.34,<1
+Pillow>=11,<13
+numpy>=2,<3
+scikit-learn>=1.5,<2
+requests>=2.32,<3
+# Install facenet-pytorch==2.6.0 with --no-deps only after matched torch/torchvision.
+# The notebook validates a forward pass. Do not install legacy TensorFlow in this host.

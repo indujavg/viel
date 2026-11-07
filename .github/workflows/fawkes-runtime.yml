@@ -1,0 +1,26 @@
+name: Validate upstream Fawkes runtime
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  upstream-smoke:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+      - name: Install isolated legacy dependencies
+        run: >-
+          pip install tensorflow==2.4.1 keras==2.4.3 numpy==1.19.5
+          Pillow==9.5.0 mtcnn==0.1.1 opencv-python==4.5.5.64
+          protobuf==3.20.3 scipy==1.10.1 bleach==6.1.0 'setuptools<70'
+          scikit-image==0.19.3
+      - name: Install reviewed upstream Fawkes
+        run: |
+          git clone https://github.com/Shawn-Shan/fawkes.git /tmp/viel-fawkes-upstream
+          git -C /tmp/viel-fawkes-upstream checkout --detach aedaa82d22504c4e7dbc86de869a6e0d943a5f2a
+          pip install --no-deps -e /tmp/viel-fawkes-upstream
+      - name: Generate a real cloak with downloaded model weights
+        run: python scripts/fawkes_smoke.py

@@ -31,6 +31,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r backend/requirements-test.txt
-      - run: pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install --no-deps facenet-pytorch==2.6.0
+      - run: pip install scikit-learn
       - run: python -m unittest discover -s backend/tests -v
       - run: python -m compileall -q backend

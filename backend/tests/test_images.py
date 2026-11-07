@@ -37,5 +37,14 @@ class ImagesTest(unittest.TestCase):
         image=Image.new('RGB',(64,64));image.info['icc_profile']=b'broken profile'
         with self.assertRaises(ValueError):decode_image(png_bytes(image))
 
+    def test_opaque_alpha_png_is_accepted_but_transparency_is_rejected(self):
+        image=Image.new('RGBA',(64,64),(100,120,140,255))
+        restored=decode_image(png_bytes(image))
+        self.assertEqual(restored.mode,'RGB')
+        self.assertEqual(restored.getpixel((0,0)),(100,120,140))
+        image.putpixel((0,0),(100,120,140,128))
+        with self.assertRaises(ValueError):decode_image(png_bytes(image))
+
 if __name__=='__main__':unittest.main()
+
 
